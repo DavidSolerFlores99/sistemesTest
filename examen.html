@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Examen</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 750px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-align: center;
+            margin-bottom: 30px;
+            letter-spacing: -0.5px;
+        }
+
+        .question {
+            margin-bottom: 30px;
+            padding: 25px;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            border-left: 4px solid #667eea;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .question:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+        }
+
+        .question p {
+            color: #2d3748;
+            font-size: 17px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .options {
+            list-style: none;
+            padding: 0;
+        }
+
+        .options li {
+            margin-bottom: 12px;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            border-radius: 8px;
+            transition: background-color 0.2s ease;
+            cursor: pointer;
+        }
+
+        .options li:hover {
+            background-color: #f7fafc;
+        }
+
+        .options input[type="radio"] {
+            margin-right: 12px;
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: #667eea;
+        }
+
+        .options span {
+            color: #4a5568;
+            line-height: 1.4;
+        }
+
+        .correct {
+            color: #38a169 !important;
+            font-weight: 600;
+        }
+
+        .incorrect {
+            color: #e53e3e !important;
+            font-weight: 600;
+        }
+
+        button {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            font-size: 18px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #ffffff;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            margin-top: 20px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        }
+
+        button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        #result {
+            text-align: center;
+            font-size: 24px;
+            font-weight: 700;
+            margin-top: 25px;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .penalty-info {
+            text-align: center;
+            color: #718096;
+            font-size: 14px;
+            margin-top: 10px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📝 Examen</h1>
+        
+        <!-- Sección donde se generarán dinámicamente las preguntas -->
+        <div id="quiz"></div>
+        
+        <!-- Botón para calcular la nota -->
+        <button onclick="calcularResultado()">Calcular Nota</button>
+
+        <!-- Resultado -->
+        <div id="result"></div>
+        <div class="penalty-info" id="penalty-info"></div>
+    </div>
+
+    <script>
+        // CONSTANTE: Penalización por respuesta incorrecta
+        const PENALIZACION_INCORRECTA = 0.2; // Resta 0.25 puntos por cada respuesta incorrecta
+        
+        // CONSTANTE: Cantidad de preguntas a mostrar
+        const CANTIDAD_PREGUNTAS = 10; // -1 = todas las preguntas, otro número = cantidad aleatoria
+
+        // Arreglo de preguntas y respuestas
+        let preguntas = [];
+        let preguntasParaMostrar = [];
+
+        // Función para añadir preguntas
+        function anadir_pregunta(texto, ...opciones) {
+            preguntas.push({
+                texto: texto,
+                opciones: opciones,
+                correcta: 0 // La opción correcta siempre es la primera
+            });
+        }
+
+        // Añadir preguntas de ejemplo
+     
+        </script>
+    <script src="preguntas.js"></script>
+            <script>
+
+        // Función para mezclar un array (Fisher-Yates shuffle)
+        function mezclarArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // Seleccionar preguntas según la constante CANTIDAD_PREGUNTAS
+        function seleccionarPreguntas() {
+            if (CANTIDAD_PREGUNTAS === -1) {
+                // Mostrar todas las preguntas
+                preguntasParaMostrar = [...preguntas];
+            } else {
+                // Seleccionar cantidad aleatoria de preguntas
+                const cantidad = Math.min(CANTIDAD_PREGUNTAS, preguntas.length);
+                const preguntasMezcladas = mezclarArray([...preguntas]);
+                preguntasParaMostrar = preguntasMezcladas.slice(0, cantidad);
+            }
+        }
+
+        // Generar las preguntas dinámicamente en el HTML
+        function generarPreguntas() {
+            seleccionarPreguntas();
+            
+            const quizContainer = document.getElementById('quiz');
+            preguntasParaMostrar.forEach((pregunta, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.classList.add('question');
+                questionDiv.innerHTML = `<p><strong>${index + 1}. ${pregunta.texto}</strong></p>`;
+                
+                const optionsList = document.createElement('ul');
+                optionsList.classList.add('options');
+                
+                // Mezclar las opciones
+                const opcionesMezcladas = mezclarArray([...pregunta.opciones]);
+
+                opcionesMezcladas.forEach((opcion, i) => {
+                    const optionItem = document.createElement('li');
+                    const input = document.createElement('input');
+                    input.type = 'radio';
+                    input.name = `q${index}`;
+                    input.value = opcion;
+                    input.id = `q${index}_${i}`;
+
+                    // Permitir desmarcar la opción seleccionada
+                    input.addEventListener('click', function() {
+                        if (this.checked && this.dataset.clicked) {
+                            this.checked = false;
+                            this.removeAttribute('data-clicked');
+                        } else {
+                            this.setAttribute('data-clicked', true);
+                        }
+                    });
+
+                    const label = document.createElement('span');
+                    label.textContent = opcion;
+                    label.style.cursor = 'pointer';
+                    
+                    // Hacer click en el texto selecciona/deselecciona el radio
+                    label.addEventListener('click', function() {
+                        if (input.checked && input.dataset.clicked) {
+                            input.checked = false;
+                            input.removeAttribute('data-clicked');
+                        } else {
+                            input.checked = true;
+                            input.setAttribute('data-clicked', true);
+                        }
+                    });
+
+                    optionItem.appendChild(input);
+                    optionItem.appendChild(label);
+                    optionsList.appendChild(optionItem);
+                });
+
+                questionDiv.appendChild(optionsList);
+                quizContainer.appendChild(questionDiv);
+            });
+
+            // Mostrar información sobre la penalización
+            if (PENALIZACION_INCORRECTA > 0) {
+                document.getElementById('penalty-info').innerHTML = 
+                    `⚠️ Cada respuesta incorrecta resta ${PENALIZACION_INCORRECTA} puntos`;
+            }
+        }
+
+        // Calcular el resultado del examen
+        function calcularResultado() {
+            let correctas = 0;
+            let incorrectas = 0;
+
+            preguntasParaMostrar.forEach((pregunta, index) => {
+                const opciones = document.querySelectorAll(`input[name="q${index}"]`);
+                const seleccionada = document.querySelector(`input[name="q${index}"]:checked`);
+
+                opciones.forEach((opcion, i) => {
+                    const label = opcion.nextElementSibling;
+
+                    // Resetear estilos previos
+                    if (label) {
+                        label.classList.remove("correct", "incorrect");
+
+                        // Mostrar ícono de respuesta correcta o incorrecta
+                        if (opcion.value === pregunta.opciones[0]) {
+                            label.classList.add("correct");
+                            label.innerHTML = `${opcion.value} ✅`;
+                        } else if (seleccionada && seleccionada.value === opcion.value) {
+                            label.classList.add("incorrect");
+                            label.innerHTML = `${opcion.value} ❌`;
+                        } else {
+                            label.innerHTML = `${opcion.value}`;
+                        }
+                    }
+                });
+
+                // Calcular puntaje
+                if (seleccionada) {
+                    if (seleccionada.value === pregunta.opciones[0]) {
+                        correctas++;
+                    } else {
+                        incorrectas++;
+                    }
+                }
+            });
+
+            // Calcular nota con penalización
+            const puntosPorCorrecta = 10 / preguntasParaMostrar.length;
+            const notaFinal = Math.max(0, (correctas * puntosPorCorrecta) - (incorrectas * PENALIZACION_INCORRECTA));
+            
+            document.getElementById('result').innerHTML = `NOTA: ${notaFinal.toFixed(2)} / 10`;
+            
+            // Mostrar desglose
+            let desglose = `✓ Correctas: ${correctas} | ✗ Incorrectas: ${incorrectas}`;
+            if (incorrectas > 0) {
+                desglose += ` | Penalización: -${(incorrectas * PENALIZACION_INCORRECTA).toFixed(2)}`;
+            }
+            document.getElementById('penalty-info').innerHTML = desglose;
+
+            // Deshabilitar los botones de radio y el botón de "Calcular Nota"
+            const radioButtons = document.querySelectorAll('input[type="radio"]');
+            radioButtons.forEach(radio => {
+                radio.disabled = true;
+            });
+
+            const calcularButton = document.querySelector('button');
+            calcularButton.disabled = true;
+        }
+
+        // Llamar a la función para generar las preguntas al cargar la página
+        generarPreguntas();
+    </script>
+</body>
+</html>
