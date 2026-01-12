@@ -680,3 +680,639 @@ anadir_pregunta(
   "write(output, 'missatge');",
   "log('missatge');"
 );
+
+
+// ============================================
+// PREGUNTES SOBRE TIMING I DELTA DELAYS
+// ============================================
+
+anadir_pregunta(
+    "En un procés combinacional, tenim: B <= A; C <= B; D <= C; Si A canvia a temps T, en quin temps absolut es veurà reflectit el canvi a D?",
+    "T + 3 deltas",
+    "T + 1 delta",
+    "T + 0 deltas (instantani)",
+    "T + 2 deltas"
+);
+
+anadir_pregunta(
+    "Donat: process(clk) begin if rising_edge(clk) then X <= A; Y <= X; end if; end process; Si A='1' i X='0' abans del rising edge, què passa IMMEDIATAMENT després del rising edge?",
+    "X s'assigna '1' però Y encara s'assigna '0' (el valor antic de X)",
+    "X i Y s'assignen '1' simultàniament",
+    "Y s'assigna '1' primer, després X",
+    "Dona error de compilació per dependència circular"
+);
+
+anadir_pregunta(
+    "Quin és el problema principal d'aquest codi: signal S: std_logic; ... process(clk) variable V: std_logic; begin if rising_edge(clk) then V := A; S <= V; output <= V; end if; end process;",
+    "Output llegeix el valor NOU de V (assignació immediata), però S llegeix el valor ANTIC",
+    "V no es pot usar fora del procés",
+    "Output no pot llegir una variable",
+    "S i output tindran sempre el mateix valor"
+);
+
+// ============================================
+// PREGUNTES SOBRE SÍNTESI COMPLEXA
+// ============================================
+
+anadir_pregunta(
+    "Si tenim: signal Count: integer range 0 to 1023; Quants flip-flops es sintetitzaran?",
+    "10 flip-flops (log2(1024) = 10 bits necessaris)",
+    "32 flip-flops (mida d'integer)",
+    "1024 flip-flops (un per cada valor)",
+    "11 flip-flops (per representar fins a 1023)"
+);
+
+anadir_pregunta(
+    "Quin és el problema de síntesi en: process(clk) variable temp: signed(7 downto 0); begin if rising_edge(clk) then temp := A + B; temp := temp * 2; Q <= temp; end if; end process;",
+    "Es sintetitzarà: sumador -> multiplicador -> registre Q (NO es crea registre per temp perquè és variable)",
+    "Es creen 3 registres: un per A+B, un per temp*2, i un per Q",
+    "Es crea un bucle combinacional",
+    "temp requereix 16 bits per la multiplicació"
+);
+
+anadir_pregunta(
+    "En una FSM Moore, on s'assignen les sortides i on els següents estats?",
+    "Sortides s'assignen segons l'ESTAT ACTUAL, següent estat segons ESTAT ACTUAL + ENTRADES",
+    "Sortides segons ESTAT ACTUAL + ENTRADES, següent estat segons ESTAT ACTUAL",
+    "Tant sortides com següent estat segons ESTAT ACTUAL + ENTRADES",
+    "Sortides segons SEGÜENT ESTAT, següent estat segons ESTAT ACTUAL"
+);
+
+anadir_pregunta(
+    "Quina diferència CRÍTICA hi ha entre: F <= A when SEL='1' else B; i process(SEL,A,B) begin if SEL='1' then F<=A; else F<=B; end if; end process;",
+    "Cap diferència funcional: tots dos sintetitzen el mateix multiplexor",
+    "El primer és combinacional, el segon requereix un sensitivity list complet",
+    "El concurrent statement és més ràpid",
+    "El procés crea un latch si falta else"
+);
+
+// ============================================
+// PREGUNTES SOBRE CONVERSIONS I TIPUS
+// ============================================
+
+anadir_pregunta(
+    "Quin és l'error en: signal V: std_logic_vector(7 downto 0); signal N: integer; ... N <= to_integer(V);",
+    "to_integer() només accepta signed o unsigned, NO std_logic_vector directament",
+    "N ha de ser natural, no integer",
+    "V ha de ser (0 to 7), no (7 downto 0)",
+    "Falta especificar el nombre de bits"
+);
+
+anadir_pregunta(
+    "Si fem: A <= resize(signed('1001'), 8); quin valor tindrà A?",
+    "11111001 (extensió de signe: el bit més significatiu '1' s'estén)",
+    "00001001 (extensió amb zeros)",
+    "10010000 (desplaçament a l'esquerra)",
+    "Error: '1001' és std_logic_vector, no signed"
+);
+
+anadir_pregunta(
+    "Donat: type ROM_TYPE is array(0 to 7) of std_logic_vector(3 downto 0); constant ROM: ROM_TYPE := (others => '1111'); Quin valor tindrà ROM(3)?",
+    "Error de compilació: others requereix std_logic_vector complet com '1111'",
+    "1111",
+    "0011",
+    "UUUU"
+);
+
+anadir_pregunta(
+    "En l'operació: S <= A sra 2; on A és signed(7 downto 0) := '10110011', quin serà el valor de S?",
+    "11101100 (shift arithmetic right: manté el signe, duplica el bit més significatiu)",
+    "00101100 (shift amb zeros)",
+    "11001110 (rotació)",
+    "00110011 (divisió per 4)"
+);
+
+// ============================================
+// PREGUNTES SOBRE PROCESSOS I SENSIBILITAT
+// ============================================
+
+anadir_pregunta(
+    "Quin problema té aquest procés per síntesi: process(A, B) variable sum: integer; begin sum := 0; for i in 0 to A loop sum := sum + B; end loop; Q <= sum; end process;",
+    "El rang del loop depèn d'una entrada (A), per tant NO és sintetitzable (rang ha de ser estàtic)",
+    "Les variables no es poden usar en loops",
+    "Falta Clock en el sensitivity list",
+    "sum ha de ser signal, no variable"
+);
+
+anadir_pregunta(
+    "Si un procés té sensitivity list (A, B) però usa també el senyal C, què passa?",
+    "En simulació pot no actualitzar-se quan C canvia; en síntesi es genera warning i s'infereix C automàticament",
+    "Error de compilació",
+    "C s'ignora completament",
+    "El procés s'executa sempre que A o B canvien"
+);
+
+anadir_pregunta(
+    "Diferència entre: process begin wait until rising_edge(Clk); Q <= D; end process; i process(Clk) begin if rising_edge(Clk) then Q <= D; end if; end process;",
+    "Cap diferència funcional: tots dos creen un flip-flop D sincrònic",
+    "El primer crea un latch, el segon un flip-flop",
+    "El primer no és sintetitzable",
+    "El segon és més ràpid"
+);
+
+// ============================================
+// PREGUNTES SOBRE CONFIGURACIÓ I JERARQUIA
+// ============================================
+
+anadir_pregunta(
+    "En una configuració, què fa: for all: Component1 use entity work.Entity1(RTL);",
+    "Associa TOTES les instàncies del component Component1 amb l'arquitectura RTL de Entity1",
+    "Associa només la primera instància",
+    "Crea un alias entre Component1 i Entity1",
+    "Error: 'all' no és una paraula reservada vàlida"
+);
+
+anadir_pregunta(
+    "Si tenim default binding i l'entity té 2 arquitectures (V1 analitzada primer, V2 després), quina s'usa?",
+    "Depèn de l'eina: algunes usen l'última (V2), altres la primera (V1) - comportament NO estandarditzat",
+    "Sempre la primera (V1)",
+    "Sempre l'última (V2)",
+    "Error de compilació per ambigüitat"
+);
+
+anadir_pregunta(
+    "Quina biblioteca NO cal declarar explícitament perquè és implícita?",
+    "STD.STANDARD i WORK són sempre visibles implícitament",
+    "IEEE.std_logic_1164",
+    "IEEE.numeric_std",
+    "Totes les biblioteques han de ser declarades"
+);
+
+// ============================================
+// PREGUNTES SOBRE MEMÒRIES I ARRAYS
+// ============================================
+
+anadir_pregunta(
+    "Per sintetitzar una ROM en una FPGA, quina estructura VHDL és correcta?",
+    "type ROM_TYPE is array(...) of std_logic_vector; constant ROM: ROM_TYPE := (...); Data <= ROM(Address);",
+    "type ROM_TYPE is array(...) of std_logic_vector; signal ROM: ROM_TYPE := (...);",
+    "Les ROMs no es poden sintetitzar, només RAMs",
+    "S'ha d'usar sempre un process amb clock"
+);
+
+anadir_pregunta(
+    "Quin problema té: type RAM_TYPE is array(0 to 255) of std_logic_vector(7 downto 0); signal RAM: RAM_TYPE; ... RAM(Address) <= Data; per síntesi?",
+    "Falta un process amb clock: assignacions a RAM han de ser síncrones per inferir block RAM",
+    "El rang ha de ser 'downto', no 'to'",
+    "Address ha de ser integer, no std_logic_vector",
+    "No hi ha cap problema"
+);
+
+anadir_pregunta(
+    "Si volem una RAM amb lectura asíncrona i escriptura síncrona, quin codi és correcte?",
+    "process(clk) begin if rising_edge(clk) then if WE='1' then RAM(WR_ADDR) <= DATA; end if; end if; end process; RD_DATA <= RAM(RD_ADDR);",
+    "process(clk) begin if rising_edge(clk) then RAM(WR_ADDR) <= DATA; RD_DATA <= RAM(RD_ADDR); end if; end process;",
+    "RAM(WR_ADDR) <= DATA; RD_DATA <= RAM(RD_ADDR);",
+    "No es pot fer: lectura i escriptura han de ser ambdues síncrones"
+);
+
+// ============================================
+// PREGUNTES SOBRE FSM I ESTATS
+// ============================================
+
+anadir_pregunta(
+    "Si una FSM té type State is (S0,S1,S2); i usem codificació binària, quantes possibles combinacions de flip-flops NO corresponen a cap estat?",
+    "1 combinació (11) queda sense usar amb 3 estats i 2 flip-flops",
+    "0 combinacions",
+    "2 combinacions",
+    "Depèn de la codificació que triï el sintetitzador"
+);
+
+anadir_pregunta(
+    "En una FSM amb single process, on s'han d'assignar les sortides per evitar latches?",
+    "S'han d'assignar dins de CADA branca del case (o tenir valor per defecte abans del case)",
+    "Només en el reset asíncron",
+    "Després del case statement",
+    "Les sortides sempre es registren automàticament"
+);
+
+anadir_pregunta(
+    "Quina és la diferència entre: next_state <= S1; (dins d'un process combinacional) i State <= S1; (dins d'un process amb clock)?",
+    "next_state es calcula combinacionalment, State actualitza síncronament amb el clock",
+    "Cap diferència",
+    "next_state és més ràpid",
+    "State requereix reset, next_state no"
+);
+
+// ============================================
+// PREGUNTES SOBRE GENERIC I GENERATE
+// ============================================
+
+anadir_pregunta(
+    "Si tenim: generic(N: positive := 8); i després: signal Data: std_logic_vector(N downto 0); Quants bits té Data?",
+    "N+1 bits (per exemple, si N=8, va de 8 downto 0, que són 9 bits)",
+    "N bits",
+    "Error: ha de ser N-1 downto 0",
+    "Depèn del valor per defecte"
+);
+
+anadir_pregunta(
+    "En un generate statement, el label és obligatori?",
+    "SÍ, el label és obligatori per poder referenciar les instàncies generades",
+    "NO, és opcional",
+    "Només per 'for generate', no per 'if generate'",
+    "Només en síntesi, en simulació és opcional"
+);
+
+anadir_pregunta(
+    "Quin problema té: G: for i in A'range generate ... port map(Din(i), Dout(i+1)); ... end generate; si A és (7 downto 0)?",
+    "Quan i=0, Dout(i+1)=Dout(1) està OK, però la lògica pot ser incorrecta si esperem Dout(0)",
+    "i+1 dona error perquè i és el nombre d'iteració",
+    "Error: no es pot fer aritmètica amb l'índex del generate",
+    "Cap problema"
+);
+
+// ============================================
+// PREGUNTES SOBRE TIMING AVANÇAT
+// ============================================
+
+anadir_pregunta(
+    "Si tenim setup time = 2ns, clock period = 10ns, i el retard de la lògica combinacional és 7ns, es compleix el timing?",
+    "NO: retard_logic (7ns) < period (10ns) - setup (2ns) = 8ns, però 7 < 8 SÍ es compleix. Resposta correcta: SÍ es compleix",
+    "NO, perquè 7+2=9ns < 10ns",
+    "SÍ, perquè 7ns < 10ns",
+    "Depèn del hold time"
+);
+
+anadir_pregunta(
+    "Què és el 'hold time' i quan és crític?",
+    "Temps mínim que les dades han de mantenir-se estables DESPRÉS del clock edge; crític amb retards molt curts",
+    "Temps abans del clock edge",
+    "Temps entre dos flancs de rellotge",
+    "Temps de propagació del flip-flop"
+);
+
+anadir_pregunta(
+    "Si el 'clock-to-output delay' d'un FF és 0.5ns, i la lògica combinacional té retard 3ns, quin és el retard total fins al següent FF?",
+    "3.5ns (clock-to-Q + retard_logic)",
+    "3ns (només la lògica)",
+    "0.5ns (només el FF)",
+    "Depèn del setup time del següent FF"
+);
+
+// ============================================
+// PREGUNTES SOBRE CODI REAL D'EXAMEN
+// ============================================
+
+anadir_pregunta(
+    "En CODI 3 de l'examen 08/01/2025, el procés p2 implementa:",
+    "Un registre de desplaçament a ESQUERRA (outPar_local(i) <= outPar_local(i-1) desplaça cap amunt els índexs)",
+    "Un registre de desplaçament a dreta",
+    "Un contador de 8 bits",
+    "Una memòria de 8 posicions"
+);
+
+anadir_pregunta(
+    "En el mateix CODI 3, quan 'ready' val '1', significa que:",
+    "El comptador 'count' ha arribat a '111' (7 en decimal), indicant que s'han processat 8 bits",
+    "S'ha rebut un bit d'inici",
+    "outPar conté dades vàlides des del primer clock",
+    "start està actiu"
+);
+
+anadir_pregunta(
+    "En CODI 4 dels exàmens (FSM), per passar de 'disp_time' a 'wall_climb', quina seqüència mínima cal?",
+    "mode_set (2 vegades) per arribar a 'sports', després enter per 'mtb', després up/down fins 'wall_climb'",
+    "mode_set + enter + up",
+    "Només mode_set múltiples vegades",
+    "back + mode_set + enter"
+);
+
+anadir_pregunta(
+    "En CODI 1 de l'examen 27/01/2025, l'operació 'inter1 rol to_integer(unsigned(inter2))' fa:",
+    "Rotació a L'ESQUERRA de inter1 tantes posicions com indica el valor de inter2",
+    "Rotació a la dreta",
+    "Shift lògic",
+    "Error: rol no existeix en VHDL"
+);
+
+// ============================================
+// PREGUNTES SOBRE TESTBENCHES
+// ============================================
+
+anadir_pregunta(
+    "En un testbench, per generar un rellotge que s'aturi després de cert temps, quin patró és correcte?",
+    "while NOW < STOP_TIME loop Clock<='0'; wait for 5ns; Clock<='1'; wait for 5ns; end loop; wait;",
+    "loop Clock<='0'; wait for 5ns; Clock<='1'; wait for 5ns; end loop;",
+    "process begin Clock<='0'; wait for 5ns; Clock<='1'; wait for 5ns; end process;",
+    "Clock <= not Clock after 5ns;"
+);
+
+anadir_pregunta(
+    "Si volem comprovar valors en instants precisos amb 'wait until rising_edge(Clk); wait for DELTA;', per què fem servir el delta delay?",
+    "Per esperar que tots els senyals s'estabilitzin després del flanc (deixar passar deltas de propagació)",
+    "Per fer el testbench més lent",
+    "És un error: no cal esperar després del rising_edge",
+    "Per sincronitzar amb altres processos"
+);
+
+anadir_pregunta(
+    "Quina diferència hi ha entre usar 'assert' amb severity ERROR vs FAILURE?",
+    "ERROR continua la simulació, FAILURE atura la simulació",
+    "ERROR és més greu que FAILURE",
+    "Cap diferència pràctica",
+    "ERROR només mostra un missatge, FAILURE genera excepció"
+);
+
+// ============================================
+// PREGUNTES SOBRE SÍNTESI AVANÇADA
+// ============================================
+
+anadir_pregunta(
+    "Per què aquest codi NO implica un latch: process(En,D) begin Q<='0'; if En='1' then Q<=D; end if; end process;?",
+    "Perquè hi ha assignació per DEFECTE (Q<='0') abans del if, garantint valor en tots els casos",
+    "Perquè hi ha sensitivity list completa",
+    "Perquè En és una entrada",
+    "SÍ que implica un latch"
+);
+
+anadir_pregunta(
+    "Si tenim: signal S: signed(3 downto 0); signal U: unsigned(3 downto 0); i fem U <= unsigned(S); què passa si S='1111' (que és -1 en complement a 2)?",
+    "U rebrà '1111' que s'interpreta com 15 en unsigned (reinterpretació de bits, NO conversió de valor)",
+    "U rebrà '0001'",
+    "Error de compilació",
+    "U rebrà el valor absolut de S"
+);
+
+anadir_pregunta(
+    "En síntesi, per compartir recursos (resource sharing), quina estructura és més efectiva?",
+    "Usar un multiplexor abans de l'operació: L<=A when Sel else C; R<=B when Sel else D; Z<=L+R;",
+    "Duplicar l'operació: if Sel then Z<=A+B; else Z<=C+D;",
+    "Usar variables en lloc de signals",
+    "Són equivalents"
+);
+
+// ============================================
+// PREGUNTES SOBRE OPERADORS I EXPRESSIONS
+// ============================================
+
+anadir_pregunta(
+    "Quina diferència hi ha entre: F <= A & B & C; (3 vectors de 4 bits) i F <= (A, B, C);?",
+    "Cap diferència: ambdues són concatenació, el resultat és un vector de 12 bits",
+    "La primera és concatenació, la segona és agregat (array)",
+    "La segona dona error",
+    "La primera és més eficient"
+);
+
+anadir_pregunta(
+    "Si fem: V <= V(6 downto 0) & '0'; on V és std_logic_vector(7 downto 0), quina operació realitzem?",
+    "Shift lògic a L'ESQUERRA: el bit 7 es perd, el bit 0 es posa a '0', i tots els altres es desplacen",
+    "Shift a la dreta",
+    "Rotació",
+    "Error: índexs incorrectes"
+);
+
+anadir_pregunta(
+    "Donada l'expressió: F <= '1' when A='1' and B='0' else '0' when A='0' else 'X'; Si A='1' i B='1', quin valor té F?",
+    "'X' (no compleix primera condició A='1'andB='0', no compleix segona A='0', per tant es fa l'últim else)",
+    "'1'",
+    "'0'",
+    "Error: expressió ambigua"
+);
+
+// ============================================
+// PREGUNTES SOBRE BIBLIOTEQUES I PACKAGES
+// ============================================
+
+anadir_pregunta(
+    "Quina diferència hi ha entre: use IEEE.std_logic_1164.all; i use IEEE.std_logic_1164.std_logic;?",
+    "La primera importa TOT el package, la segona només el tipus std_logic",
+    "Cap diferència",
+    "La segona dona error de sintaxi",
+    "La primera és obsoleta"
+);
+
+anadir_pregunta(
+    "Si volem usar operacions aritmètiques amb std_logic_vector, quins packages necessitem?",
+    "IEEE.numeric_std (per conversions i operadors amb unsigned/signed)",
+    "Només IEEE.std_logic_1164",
+    "IEEE.std_logic_arith (estàndard)",
+    "STD.standard.all"
+);
+
+anadir_pregunta(
+    "Per què NO és recomanable usar: library IEEE; use IEEE.std_logic_arith.all; use IEEE.std_logic_unsigned.all;?",
+    "Són packages NO estàndard (de Synopsys), millor usar IEEE.numeric_std que és estàndard",
+    "Donen errors de compilació",
+    "Són massa lents",
+    "No permeten síntesi"
+);
+
+// ============================================
+// PREGUNTES SOBRE ERRORS COMUNS
+// ============================================
+
+anadir_pregunta(
+    "Per què aquest codi dona comportament imprevisible: process(clk) begin Q1<=D1; if rising_edge(clk) then Q2<=D2; end if; end process;?",
+    "Q1 s'assigna combinacionalment (fora del if rising_edge), Q2 síncronament → inconsistència",
+    "Falta reset",
+    "Q1 i Q2 han de ser del mateix tipus",
+    "No hi ha problema"
+);
+
+anadir_pregunta(
+    "Si oblidem posar un senyal en el sensitivity list d'un procés combinacional, què passa?",
+    "En simulació pot no actualitzar-se correctament; en síntesi normalment funciona perquè l'eina infere la dependència",
+    "Error de compilació",
+    "Funciona igual",
+    "Es crea un latch"
+);
+
+anadir_pregunta(
+    "Per què aquest codi pot donar problemes: signal Clk: std_logic := '0'; Clk <= not Clk after 10ns;?",
+    "Funciona en simulació però NO és sintetitzable (no hi ha 'after' en hardware)",
+    "Error de compilació",
+    "És la manera correcta de generar un rellotge",
+    "Clk ha de ser variable"
+);
+
+// ============================================
+// PREGUNTES MÉS ESPECÍFIQUES D'EXAMEN
+// ============================================
+
+anadir_pregunta(
+    "En el disseny 'thing' del CODI 3 (27/01/2025), per què 'ready' depèn també de 'clock'?",
+    "Per assegurar que ready només és '1' durant el flanc HIGH del clock quan count='111'",
+    "És un error de disseny",
+    "Per fer-ho síncrон",
+    "Per evitar glitches"
+);
+
+anadir_pregunta(
+    "En CODI 2 (27/01/2025), l'entitat 'dmx' amb case sel implementa:",
+    "Un demultiplexor (envia in1 a una de les 4 sortides segons sel)",
+    "Un multiplexor",
+    "Un descodificador",
+    "Un registre de desplaçament"
+);
+
+anadir_pregunta(
+    "En el testbench de CODI 4, per què s'usa 'while Now < 120 ns' en el process del rellotge?",
+    "Per limitar la generació del clock a un temps màxim de simulació",
+    "És obligatori en tots els testbenches",
+    "Per sincronitzar amb altres processos",
+    "És equivalent a 'loop' infinit"
+);
+
+// ============================================
+// PREGUNTES SOBRE ATRIBUTS
+// ============================================
+
+anadir_pregunta(
+    "Si A és std_logic_vector(5 downto 2), quin valor té A'length?",
+    "4 (nombre d'elements: 5,4,3,2)",
+    "5",
+    "3",
+    "Error: índexs invalids"
+);
+
+anadir_pregunta(
+    "Donada: type State is (Idle, Run, Stop); signal S: State; Quin valor té State'left?",
+    "Idle (el primer valor enumerat)",
+    "Run",
+    "Stop",
+    "Error: 'left' només per arrays"
+);
+
+anadir_pregunta(
+    "Si fem: for i in A'reverse_range loop on A és (7 downto 0), en quin ordre es recorre?",
+    "De 0 a 7 (inverteix el 7 downto 0)",
+    "De 7 a 0",
+    "Error de sintaxi",
+    "Igual que A'range"
+);
+
+// ============================================
+// PREGUNTES SOBRE OPTIMITZACIÓ
+// ============================================
+
+anadir_pregunta(
+    "Per evitar crear un segon flip-flop innecessari en: process(clk) begin if rising_edge(clk) then Q<=Data; QB<=not Data; end if; end process;, com ho fem?",
+    "Treure QB del process: process(clk) begin if rising_edge(clk) then Q<=Data; end if; end process; QB <= not Q;",
+    "Usar variable per QB",
+    "Posar QB en un altre process",
+    "No es pot evitar"
+);
+
+anadir_pregunta(
+    "Què fa l'optimització 'register retiming'?",
+    "Mou registres a través de la lògica combinacional per equilibrar els retards dels camins sense canviar funcionalitat",
+    "Elimina registres no usats",
+    "Duplica registres per redundància",
+    "Canvia la freqüència de rellotge"
+);
+
+anadir_pregunta(
+    "Per resource sharing manual en: Z <= A+B when K='1' else C+D;, quantes unitats d'addició es poden inferir?",
+    "Depèn del sintetitzador: pot usar 2 sumadors o compartir 1 sumador amb un multiplexor",
+    "Sempre 2 sumadors",
+    "Sempre 1 sumador",
+    "Error: no es pot sintetitzar"
+);
+
+// ============================================
+// PREGUNTES SOBRE ESPECIFICITATS
+// ============================================
+
+anadir_pregunta(
+    "Quan usem 'open' en un port map, significa:",
+    "Eixe port queda desconnectat (per sortides que no necessitem)",
+    "El port s'obre per lectura",
+    "Error de sintaxi",
+    "El port s'inicialitza amb el valor per defecte"
+);
+
+anadir_pregunta(
+    "Si una entitat té: port(Clk: in std_logic; Reset: in std_logic := '0'; ...), què significa?",
+    "Reset té valor per defecte '0' si no es connecta en el port map",
+    "Reset sempre val '0'",
+    "Error: els ports no poden tenir valors per defecte",
+    "Reset és opcional en el port map"
+);
+
+anadir_pregunta(
+    "En un component, què és millor: positional association o named association en port map?",
+    "Named association és més clara i menys propensa a errors (especialment amb molts ports)",
+    "Positional és sempre millor",
+    "Són exactament iguals",
+    "Positional és més ràpida en simulació"
+);
+
+// ============================================
+// ÚLTIMES PREGUNTES MÉS COMPLICADES
+// ============================================
+
+anadir_pregunta(
+    "Si tenim 3 processos que assignen al mateix senyal S en diferents moments, qui 'guanya'?",
+    "El darrer driver que assigna un valor diferent de 'Z' (o segons la funció de resolució si és std_logic)",
+    "El primer procés",
+    "Error: múltiples drivers no permesos",
+    "El procés amb prioritat més alta"
+);
+
+anadir_pregunta(
+    "Per implementar una sortida tristate en VHDL: Output <= Data when Enable='1' else 'Z';, què passa si múltiples drivers posen 'Z'?",
+    "El bus queda en alta impedància ('Z'), un altre driver pot prendre el control",
+    "Error de curtcircuit",
+    "El primer driver controla",
+    "'Z' es converteix en 'X'"
+);
+
+anadir_pregunta(
+    "En TextIO, per què usem 'variable' i no 'signal' per la variable 'L: line'?",
+    "Perquè les operacions de lectura/escriptura (readline, write) requereixen paràmetres variable per canviar-los immediatament",
+    "És una convenció, també funciona amb signal",
+    "line és un tipus especial que només pot ser variable",
+    "Per eficiència de simulació"
+);
+
+anadir_pregunta(
+    "Si volem inicialitzar una RAM llegint d'un fitxer en síntesi (no simulació), quin mètode és correcte?",
+    "Usar una funció InitRAM que llegeix el fitxer i retorna la constant/array inicialitzat (síntesi interpreta el contingut)",
+    "Usar TextIO en un process",
+    "Les RAMs no es poden inicialitzar en síntesi",
+);
+
+
+anadir_pregunta(
+"Si fem: type Matrix is array(0 to 3, 0 to 3) of integer; signal M: Matrix; Com accedim a l'element de fila 2, columna 3?",
+"M(2, 3)",
+"M(2)(3)",
+"M[2][3]",
+"Error: arrays multidimensionals no suportats"
+);
+anadir_pregunta(
+"En una configuració amb 'for all: MUX use entity work.MUX2(RTL);', si després afegim una nova instància de MUX, què passa?",
+"La nova instància també usa automàticament work.MUX2(RTL) per 'all'",
+"Error: cal recompilar la configuració",
+"La nova instància usa default binding",
+"Cal afegir-la manualment a la configuració"
+);
+anadir_pregunta(
+"Per què en: F <= resize(A, 8) + resize(B, 8); només cal fer resize d'UN operand si F és de 8 bits?",
+"L'operador '+' retorna el mateix nombre de bits que el operand MÉS AMPLE, per tant n'hi ha prou amb un resize",
+"És incorrecte: cal resize dels dos",
+"És una optimització del compilador",
+"Depèn si A i B són signed o unsigned"
+);
+anadir_pregunta(
+"Si tenim: signal V: std_logic_vector(3 downto 0); i fem V(5) <= '1';, què passa?",
+"Error en simulació (índex fora de rang), però pot compilar",
+"V s'expandeix automàticament",
+"Error de compilació",
+"V(5) s'ignora"
+);
+anadir_pregunta(
+"En una FSM single-process, per què pot ser problemàtic llegir el valor de 'State' dins del mateix procés on s'actualitza?",
+"No és problemàtic si s'entén que es llegeix el valor ACTUAL (pre-clock), no el següent",
+"Sempre dona error",
+"Crea un latch",
+"No es pot fer"
+);
+anadir_pregunta(
+"Per tenir un comptador de 0 a 999 amb el mínim de bits, quin tipus hauríem d'usar?",
+"integer range 0 to 999 (infereix 10 bits: 2^10=1024 > 999)",
+"integer (32 bits)",
+"std_logic_vector(9 downto 0)",
+"unsigned(10 downto 0)"
+);
